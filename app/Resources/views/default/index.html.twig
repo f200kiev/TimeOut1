@@ -1,0 +1,111 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div id="wrapper">
+        <div id="container">
+            <div id="welcome">
+                <h1><span>Welcome to</span> Symfony {{ constant('Symfony\\Component\\HttpKernel\\Kernel::VERSION') }}</h1>
+            </div>
+
+            <div id="status">
+                <p>
+                   <img src="images/logo.png" width="500px">
+                </p>
+            </div>
+
+
+            <div>
+                <h2>Guests list</h2>
+                {% for guest in guests %}
+                    <div id="guests_list">
+                        <input type="checkbox" name="guest[]" value="{{ guest }}" />{{ guest }}
+                    </div>
+                {%  endfor %}
+                <button id="result" name="Result" value="OK">Result</button>
+            </div>
+            <div>&nbsp;</div>
+            <div id="venues_result"></div>
+        </div>
+    </div>
+        <script src="js/jquery-3.2.1.js"></script>
+        <script>
+            $("#result").click(function getVenues(event) {
+                event.preventDefault();
+                var guests = [];
+                $("#guests_list > input").each(function() {
+                    if (this.checked) {
+                        guests.push(this.value);
+                    };
+                });
+                if (guests.length > 0 ) {
+                    $.ajax({
+                        url: '/venues',
+                        method: "POST",
+                        data: {guests: guests}
+                    }).done(function (response) {
+                        var applyVenue = '';
+                        var declineVenue = '';
+                        $.each(response[0], function(index, value) {
+                            applyVenue += '<li>' + index + '</li>';
+                        });
+                        $.each(response[1], function(index, value) {
+                            declineVenue += '<li>' + index + '</li>';
+
+                            if (value.length > 0 ) {
+                                declineVenue += '<ul>';
+                                $.each(value, function (index, reason) {
+                                    declineVenue += '<li>' + reason + '</li>';
+                                });
+                                declineVenue += '</ul>';
+                            }
+                        });
+                        var result = '<div>' +
+                            '<h2>Places to go:</h2>' +
+                            '<ul>' +
+                                applyVenue +
+                            '</ul>' +
+                            '</div>' +
+                            '<div>' +
+                            '<h2>Plases to avoid:</h2>' +
+                            '<ul>' +
+                                declineVenue
+                            '</ul>' +
+                            '</div>';
+                        $('#venues_result').html(result);
+                    });
+                }
+                else {
+                    $('#venues_result').append("Please select at list one guest");
+                }
+            });
+        </script>
+{% endblock %}
+
+{% block stylesheets %}
+<style>
+    body { background: #F5F5F5; font: 18px/1.5 sans-serif; }
+    h1, h2 { line-height: 1.2; margin: 0 0 .5em; }
+    h1 { font-size: 36px; }
+    h2 { font-size: 21px; margin-bottom: 1em; }
+    p { margin: 0 0 1em 0; }
+    a { color: #0000F0; }
+    a:hover { text-decoration: none; }
+    code { background: #F5F5F5; max-width: 100px; padding: 2px 6px; word-wrap: break-word; }
+    #wrapper { background: #FFF; margin: 1em auto; max-width: 800px; width: 95%; }
+    #container { padding: 2em; }
+    #welcome, #status { margin-bottom: 2em; }
+    #welcome h1 span { display: block; font-size: 75%; }
+    #icon-status, #icon-book { float: left; height: 64px; margin-right: 1em; margin-top: -4px; width: 64px; }
+    #icon-book { display: none; }
+
+    @media (min-width: 768px) {
+        #wrapper { width: 80%; margin: 2em auto; }
+        #icon-book { display: inline-block; }
+        #status a, #next a { display: block; }
+
+        @-webkit-keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } }
+        @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } }
+        .sf-toolbar { opacity: 0; -webkit-animation: fade-in 1s .2s forwards; animation: fade-in 1s .2s forwards;}
+    }
+</style>
+{% endblock %}
